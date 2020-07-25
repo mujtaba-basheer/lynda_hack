@@ -28,6 +28,7 @@ class Lynda:
         self.html = ""
         self.links = list()
         self.titles = list()
+        self.sections = list()
         self.course = course
 
     def writeLink(self, link):
@@ -42,6 +43,55 @@ class Lynda:
         f.write(data)
         f.close()
 
+    def printTree(self):
+        sections = self.sections
+
+        for section in sections:
+            print(f"\t{section['title']}")
+            for video in section['videos']:
+                print(video['title'])
+            print("")
+
+    def writeTree(self):
+        soup = BeautifulSoup(self.html, "html5lib")
+        section_objs = soup.findAll(
+            'h4', attrs={'data-ga-label': 'toc-chapter', 'class': 'ga'})
+
+        sections = [{'title': section.getText().strip(), 'id': int(section['data-ga-value']), 'videos': list()}
+                    for section in section_objs]
+
+        link_objs = soup.findAll(
+            'a', attrs={'class': 'item-name video-name ga'})
+        links = [{'title': link.getText().strip(), 'id': int(link['data-ga-value'])}
+                 for link in link_objs]
+
+        print("Writing out the video-ids...\n")
+        with open("titles.js", "a") as fh:
+            fh.write("const titles = ")
+            data = str([link['id'] for link in links]) + ";\n\n"
+            fh.write(data)
+            fh.write("module.exports = titles;")
+
+        for i in range(len(sections) - 1, -1, -1):
+            section = sections[i]
+            j = 0
+            for link in links:
+                if link['id'] > section['id']:
+                    section['videos'].append(link)
+                    j += 1
+            while j > 0:
+                links.pop()
+                j -= 1
+
+        print("Writing out the course-structure...\n")
+        with open("structure.js", "a") as fh:
+            fh.write("const structure = ")
+            data = str(sections) + ";\n\n"
+            fh.write(data)
+            fh.write("module.exports = structure;")
+
+        self.sections = sections
+
     def getSeaSurf(self):
         soup = BeautifulSoup(self.html, "html5lib")
         seasurf = soup.find('input', attrs={'id': 'seasurf'})['value']
@@ -50,7 +100,7 @@ class Lynda:
     def verifyAcc(self):
         soup = BeautifulSoup(self.html, "html5lib")
         name = soup.find('span', attrs={'class': 'account-name'})
-        print(name.getText() + "\n")
+        print("\n" + name.getText() + "\n")
 
     def getCourseUrl(self):
         soup = BeautifulSoup(self.html, "html5lib")
@@ -96,6 +146,7 @@ class Lynda:
 
             # Extracting All Video Page Links
             self.getVideoLinks()
+            self.writeTree()
 
             # Writing Out the Video links
             print("Writing video links to 'links.js'\n")
@@ -109,16 +160,6 @@ class Lynda:
                 self.selectVideo()
             with open("links.js", "a") as fh:
                 fh.write("];\n\nmodule.exports = links;")
-
-            # Writing Out Video Titles
-            with open("titles.js", "a") as fh:
-                fh.write("const titles = [")
-
-            for title in self.titles:
-                self.writeTitles(title)
-
-            with open("titles.js", "a") as fh:
-                fh.write("];\n\nmodule.exports = titles;")
 
             # Logging Out
             r = s.get("https://www.lynda.com/signout", headers=self.headers)
@@ -149,6 +190,13 @@ if __name__ == "__main__":
             for line in f.readlines():
                 print(line)
             f.close()
+
+        displayTree = input("Enter 'Y' to display course structure: ")
+        if displayTree == "Y":
+            # Displaying Course Structure
+            print("\nDisplaying Course Structure...\n")
+            time.sleep(3)
+            lynda.printTree()
 
         print("Run 'node vid.js' to download the files.")
     print("exiting...")
