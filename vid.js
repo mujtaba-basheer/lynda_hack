@@ -14,20 +14,23 @@ const download_file = async (link, path) => {
     });
 };
 
-if (links.length == titles.length) {
+const start = async () => {
     const len = links.length;
     for (let i = 0; i < len; i++) {
         const path = "videos/" + `${titles[i]}` + ".mp4";
-        download_file(links[i], path)
-            .then((status) => {
-                if (status) {
-                    console.log(`downloading - [${i + 1}/${len}]`);
-                }
-            })
-            .catch(console.error);
+        try {
+            const status = await download_file(links[i], path);
+            if (status) {
+                console.log(`downloading - [${i + 1}/${len}]`);
+            }
+        } catch (error) {
+            console.error(error);
+        }
     }
+};
 
-    console.log("All files downloaded successfully!\n");
+if (links.length == titles.length) {
+    start();
     console.log("Run 'node clean.js' to structre the files correctly");
 } else {
     console.log("Oops, there was an error!");
