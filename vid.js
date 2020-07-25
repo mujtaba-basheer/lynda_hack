@@ -7,17 +7,25 @@ const titles = require("./titles");
 console.log("Initializing download...");
 
 const download_file = async (link, path) => {
-    // download(link).pipe(fs.createWriteStream(path));
+    return new Promise(async (res) => {
+        // download(link).pipe(fs.createWriteStream(path));
 
-    fs.writeFileSync(path, await download(link));
+        fs.writeFileSync(path, await download(link));
+        res(true);
+    });
 };
 
 if (links.length == titles.length) {
     const len = links.length;
     for (let i = 0; i < len; i++) {
-        console.log(`downloading - [${i + 1}/${len}]`);
         const path = "videos/" + `${titles[i]}` + ".mp4";
-        download_file(links[i], path);
+        download_file(links[i], path)
+            .then((status) => {
+                if (status) {
+                    console.log(`downloading - [${i + 1}/${len}]`);
+                }
+            })
+            .catch(console.error);
     }
 
     console.log("All files downloaded successfully!\n");
