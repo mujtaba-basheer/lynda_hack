@@ -154,10 +154,13 @@ class Lynda:
 
             with open("links.js", "a") as fh:
                 fh.write("const links = [")
+            i = 0
             for link in self.links:
                 r = s.get(link, headers=self.headers)
                 self.html = r.content
                 self.selectVideo()
+                i += 1
+                print(f"written [{i}/{len(self.links)}]")
             with open("links.js", "a") as fh:
                 fh.write("];\n\nmodule.exports = links;")
 
