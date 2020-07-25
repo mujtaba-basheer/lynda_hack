@@ -10,8 +10,7 @@ const download_file = async (link, path) => {
     return new Promise(async (res) => {
         // download(link).pipe(fs.createWriteStream(path));
 
-        fs.writeFileSync(path, await download(link));
-        res(true);
+        fs.writeFile(path, await download(link), () => res(true));
     });
 };
 

@@ -37,12 +37,6 @@ class Lynda:
         f.write(data)
         f.close()
 
-    def writeTitles(self, title):
-        f = open('titles.js', 'a')
-        data = "'" + title + "',\n"
-        f.write(data)
-        f.close()
-
     def printTree(self):
         sections = self.sections
 
@@ -53,44 +47,19 @@ class Lynda:
             print("")
 
     def writeTree(self):
-        soup = BeautifulSoup(self.html, "html5lib")
-        section_objs = soup.findAll(
-            'h4', attrs={'data-ga-label': 'toc-chapter', 'class': 'ga'})
-
-        sections = [{'title': section.getText().strip(), 'id': int(section['data-ga-value']), 'videos': list()}
-                    for section in section_objs]
-
-        link_objs = soup.findAll(
-            'a', attrs={'class': 'item-name video-name ga'})
-        links = [{'title': link.getText().strip(), 'id': int(link['data-ga-value'])}
-                 for link in link_objs]
-
-        print("Writing out the video-ids...\n")
+        print("Writing out the video ids...\n")
         with open("titles.js", "a") as fh:
             fh.write("const titles = ")
-            data = str([link['id'] for link in links]) + ";\n\n"
+            data = str(self.titles) + ";\n\n"
             fh.write(data)
             fh.write("module.exports = titles;")
-
-        for i in range(len(sections) - 1, -1, -1):
-            section = sections[i]
-            j = 0
-            for link in links:
-                if link['id'] > section['id']:
-                    section['videos'].append(link)
-                    j += 1
-            while j > 0:
-                links.pop()
-                j -= 1
 
         print("Writing out the course-structure...\n")
         with open("structure.js", "a") as fh:
             fh.write("const structure = ")
-            data = str(sections) + ";\n\n"
+            data = str(self.sections) + ";\n\n"
             fh.write(data)
             fh.write("module.exports = structure;")
-
-        self.sections = sections
 
     def getSeaSurf(self):
         soup = BeautifulSoup(self.html, "html5lib")
@@ -113,17 +82,39 @@ class Lynda:
         link_objs = soup.findAll(
             'a', attrs={'class': 'item-name video-name ga'})
         links = [link['href'] for link in link_objs]
-        titles = [link.getText().strip() for link in link_objs]
 
         print("Total links found:", len(links), "\n")
         self.links = links
-        self.titles = titles
 
     def selectVideo(self):
         soup = BeautifulSoup(self.html, "html5lib")
         link = soup.find(
             'video', attrs={'class': 'player'})['data-src']
         self.writeLink(link)
+
+    def getStruct(self):
+        sections = list()
+        titles = list()
+        soup = BeautifulSoup(self.html, "html5lib")
+        container = soup.find(
+            'ul', attrs={'class': 'course-toc toc-container autoscroll'})
+        for section in container.contents:
+            if section.name is not None:
+                sec_title = section.find('h4').getText().strip()
+                sec_videos = list()
+                ul = section.find('ul', attrs={'class': 'row toc-items'})
+                lis = section.findAll('li', attrs={'class': 'toc-video-item'})
+                for li in lis:
+                    vid_id = int(li['data-video-id'])
+                    vid_title = li.find(
+                        'a', attrs={'class': 'item-name video-name ga'}).getText().strip()
+                    sec_videos.append({'title': vid_title, 'id': vid_id})
+                    titles.append(vid_id)
+
+                sections.append({'title': sec_title, 'videos': sec_videos})
+
+        self.sections = sections
+        self.titles = titles
 
     def makeReq(self):
         with self.s as s:
@@ -146,6 +137,7 @@ class Lynda:
 
             # Extracting All Video Page Links
             self.getVideoLinks()
+            self.getStruct()
             self.writeTree()
 
             # Writing Out the Video links
