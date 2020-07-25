@@ -20,7 +20,8 @@ if (links.length == titles.length) {
         download_file(links[i], path);
     }
 
-    console.log("All files downloaded successfully!");
+    console.log("All files downloaded successfully!\n");
+    console.log("Run 'node clean.js' to structre the files correctly")
 } else {
     console.log("Oops, there was an error!");
 }
