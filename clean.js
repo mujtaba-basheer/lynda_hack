@@ -1,7 +1,11 @@
 const fs = require("fs");
 const structure = require("./structure");
 
-const root = process.argv[2] || "root";
+const root =
+    process.argv[2]
+        .replace(":", " - ")
+        .replace("/", " or ")
+        .replace("?", "Q") || "root";
 
 const createRootFolder = () => {
     fs.mkdir(`course/${root}`, {}, (err) => {
@@ -19,6 +23,18 @@ const createFolders = () => {
             .replace("/", " or ")
             .replace("?", "Q");
         fs.mkdir(`course/${root}/${folderName}`, {}, (err) => {
+            if (err) {
+                console.error(err);
+                return;
+            }
+        });
+    });
+};
+
+const removeFiles = () => {
+    const files = ["structure", "links", "titles"];
+    files.forEach((fileName) => {
+        fs.unlink(fileName + ".js", (err) => {
             if (err) {
                 console.error(err);
                 return;
@@ -60,4 +76,5 @@ const moveFiles = () => {
 
 createRootFolder();
 createFolders();
+removeFiles();
 moveFiles().then(() => console.log("\nYou're good to go :-)"));
