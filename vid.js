@@ -6,6 +6,11 @@ const titles = require("./titles");
 
 console.log("Initializing download...");
 
+let memo = 0;
+if (process.argv[2]) {
+    memo = process.argv[2] - 1;
+}
+
 const download_file = async (link, path) => {
     return new Promise(async (res) => {
         // download(link).pipe(fs.createWriteStream(path));
@@ -17,7 +22,7 @@ const download_file = async (link, path) => {
 const start = () => {
     return new Promise(async (res) => {
         const len = links.length;
-        for (let i = 0; i < len; i++) {
+        for (let i = memo; i < len; i++) {
             const path = "videos/" + `${titles[i]}` + ".mp4";
             try {
                 const status = await download_file(links[i], path);
