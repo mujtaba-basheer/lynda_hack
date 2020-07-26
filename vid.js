@@ -21,7 +21,7 @@ const start = async () => {
         try {
             const status = await download_file(links[i], path);
             if (status) {
-                console.log(`downloading - [${i + 1}/${len}]`);
+                console.log(`downloaded - [${i + 1}/${len}]`);
             }
         } catch (error) {
             console.error(error);

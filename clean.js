@@ -42,8 +42,8 @@ const moveFiles = () => {
             const num = index + 1 < 10 ? "0" + (index + 1) : index + 1 + "";
             const fileName = num + ". " + title;
             fs.rename(
-                `videos/${id}.txt`,
-                `course/${root}/${folderName}/${fileName}.txt`,
+                `videos/${id}.mp4`,
+                `course/${root}/${folderName}/${fileName}.mp4`,
                 (err) => {
                     if (err) {
                         console.error(err);
