@@ -2,11 +2,12 @@ const fs = require("fs");
 const structure = require("./structure");
 
 let root = "root";
+
+const makeNameValid = (str = "") =>
+    str.replace(":", " - ").replace("/", " or ").replace("?", "Q");
+
 if (process.argv[2]) {
-    root = process.argv[2]
-        .replace(":", " - ")
-        .replace("/", " or ")
-        .replace("?", "Q");
+    root = makeNameValid(process.argv[2]);
 }
 
 const createRootFolder = () => {
@@ -34,10 +35,7 @@ const createFolders = () => {
         });
     };
     structure.forEach(async (section) => {
-        const folderName = section.title
-            .replace(":", " - ")
-            .replace("/", " or ")
-            .replace("?", "Q");
+        const folderName = makeNameValid(section.title);
         try {
             await makeFolder(folderName);
         } catch (err) {
@@ -82,16 +80,10 @@ const moveFiles = () => {
     };
     return new Promise((res) => {
         structure.forEach((section) => {
-            const folderName = section.title
-                .replace(":", " - ")
-                .replace("/", " or ")
-                .replace("?", "Q");
+            const folderName = makeNameValid(section.title);
             section.videos.forEach(async (vidFile, index) => {
                 let { id, title } = vidFile;
-                title = title
-                    .replace(":", " - ")
-                    .replace("/", " or ")
-                    .replace("?", "Q");
+                title = makeNameValid(title);
                 const num = index + 1 < 10 ? "0" + (index + 1) : index + 1 + "";
                 const fileName = num + ". " + title;
                 try {
